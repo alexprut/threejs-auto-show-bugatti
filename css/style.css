@@ -24,3 +24,24 @@ body .dg.ac {
 body .dg.a {
 	margin: 0;
 }
+
+#panel {
+	width: 100%;
+	height: 48px;
+	position : fixed;
+	top: 0;
+	left: 0;
+	background-color: rgb(17, 17, 51);
+}
+
+#panel #logo {
+	float: left;
+	height: 48px;
+	margin-left : 20px;
+}
+
+#panel #logo img {
+	position: absolute;
+	top: 0;
+	left: -20px;
+}
