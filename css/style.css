@@ -1,0 +1,47 @@
+body {
+	width: 100%;
+	height: 100%;
+	margin: 0;
+}
+
+canvas {
+	width: 100%;
+	height: 100%;
+}
+
+#stats {
+	position : fixed;
+	z-index: 1000;
+	right: 245px;
+	top: 0;
+}
+
+body .dg.ac {
+	right: 0;
+	z-index: 1000;
+}
+
+body .dg.a {
+	margin: 0;
+}
+
+#panel {
+	width: 100%;
+	height: 48px;
+	position : fixed;
+	top: 0;
+	left: 0;
+	background-color: rgb(17, 17, 51);
+}
+
+#panel #logo {
+	float: left;
+	height: 48px;
+	margin-left : 20px;
+}
+
+#panel #logo img {
+	position: absolute;
+	top: 0;
+	left: -20px;
+}
