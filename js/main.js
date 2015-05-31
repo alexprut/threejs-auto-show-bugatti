@@ -196,6 +196,13 @@ AutoShow.prototype.initStats = function () {
 
     return stats;
 };
+AutoShow.prototype.initControls = function () {
+    this.controls = new THREE.OrbitControls(this.camera);
+    this.controls.maxDistance = 370;
+    this.controls.minDistance = 150;
+    this.controls.minPolarAngle = 60 * Math.PI / 180;
+    this.controls.maxPolarAngle = 85 * Math.PI / 180;
+} ;
 AutoShow.prototype.initGui = function () {
     var gui = new dat.GUI();
 
@@ -215,13 +222,13 @@ AutoShow.prototype.init = function () {
     this.scene = new THREE.Scene();
     this.camera = this.initCamera();
     this.stats = this.initStats();
-    this.controls = new THREE.OrbitControls(this.camera);
     this.stand = this.initStand();
     this.floor = this.initFloor();
     this.roof = this.initRoof();
 
     this.scene.fog = new THREE.Fog(0x000000, 500, 2000);
 
+    this.initControls();
     this.initLights();
     this.initCar();
     this.initColumns();
