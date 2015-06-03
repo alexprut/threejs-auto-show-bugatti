@@ -9,24 +9,6 @@ var BugattiCar = function () {
             opacity: 0.25,
             transparent: true
         }),
-        "gold": new THREE.MeshPhongMaterial({
-            color: 0xaa9944,
-            specular: 0xbbaa99,
-            shininess: 50,
-            combine: THREE.MultiplyOperation
-        }),
-        "bronze": new THREE.MeshPhongMaterial({
-            color: 0x150505,
-            specular: 0xee6600,
-            shininess: 10,
-            combine: THREE.MixOperation,
-            reflectivity: 0.25
-        }),
-        "chrome": new THREE.MeshPhongMaterial({
-            color: 0xffffff,
-            specular: 0xffffff,
-            combine: THREE.MultiplyOperation
-        }),
         "green-metal": new THREE.MeshLambertMaterial({
             color: 0x007711,
             combine: THREE.MultiplyOperation
@@ -113,8 +95,10 @@ AutoShow.prototype.initCar = function () {
     }).bind(this));
 };
 AutoShow.prototype.initFloor = function () {
-    var loader = new THREE.TGALoader();
-    var texture = loader.load('img/texture/cement_256_d.tga');
+    var texture = THREE.ImageUtils.loadTexture('img/texture/cement_256_d.png');
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(30, 30);
     var geometry = new THREE.PlaneGeometry(3000, 3000);
     var material = new THREE.MeshBasicMaterial({side: THREE.DoubleSide, map: texture});
     var floor = new THREE.Mesh(geometry, material);
@@ -123,8 +107,10 @@ AutoShow.prototype.initFloor = function () {
     return floor;
 };
 AutoShow.prototype.initRoof = function () {
-    var loader = new THREE.TGALoader();
-    var texture = loader.load('img/texture/cement_256_d.tga');
+    var texture = THREE.ImageUtils.loadTexture('img/texture/cement_256_d.png');
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(30, 30);
     var geometry = new THREE.PlaneGeometry(3000, 3000);
     var material = new THREE.MeshBasicMaterial({side: THREE.DoubleSide, map: texture});
     var roof = new THREE.Mesh(geometry, material);
@@ -134,9 +120,10 @@ AutoShow.prototype.initRoof = function () {
     return roof;
 };
 AutoShow.prototype.initStand = function () {
-    var loader = new THREE.TGALoader();
-    var texture = loader.load('img/texture/metal_256_d.tga');
-    var geometry = new THREE.CylinderGeometry(170, 170, 8, 100, 100);
+    var texture = THREE.ImageUtils.loadTexture('img/texture/metal_256_d.png');
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(6, 6);
+    var geometry = new THREE.BoxGeometry(170 * 2, 8, 170 * 2, 1, 1);
     var material = new THREE.MeshBasicMaterial({map: texture});
     var stand = new THREE.Mesh(geometry, material);
     stand.position.y = 2.1;
@@ -144,8 +131,10 @@ AutoShow.prototype.initStand = function () {
     return stand;
 };
 AutoShow.prototype.initColumns = function () {
-    var loader = new THREE.TGALoader();
-    var texture = loader.load('img/texture/cement_256_d.tga');
+    var texture = THREE.ImageUtils.loadTexture('img/texture/cement_256_d.png');
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(1, 2);
     var geometry = new THREE.BoxGeometry(70, 200, 70);
     var material = new THREE.MeshBasicMaterial({side: THREE.DoubleSide, map: texture});
     var firstColumn = new THREE.Mesh(geometry, material);
