@@ -1,61 +1,88 @@
+var Observable = function () {
+    this.observers = [];
+};
+Observable.prototype.constructor = Observable;
+Observable.prototype.registerObserver = function (observer) {
+    this.observers.push(observer);
+};
+Observable.prototype.notifyObservers = function () {
+    for (var indexObserver in this.observers) {
+        this.observers[indexObserver].update();
+    }
+};
+
 var BugattiCar = function () {
-    this.data = 'data/bugatti/VeyronNoUv_bin.js';
-    this.materialPalette = {
-        "pure-chrome": new THREE.MeshLambertMaterial({color: 0xffffff}),
-        "black-rough": new THREE.MeshLambertMaterial({color: 0x050505}),
-        "red-glass-50": new THREE.MeshLambertMaterial({color: 0xff0000, opacity: 0.5, transparent: true}),
-        "dark-glass": new THREE.MeshLambertMaterial({
-            color: 0x101046,
-            opacity: 0.25,
-            transparent: true
-        }),
-        "green-metal": new THREE.MeshLambertMaterial({
-            color: 0x007711,
-            combine: THREE.MultiplyOperation
-        }),
-        "black-metal": new THREE.MeshLambertMaterial({
-            color: 0x222222,
-            combine: THREE.MultiplyOperation
-        }),
-        "orange-metal": new THREE.MeshLambertMaterial({
-            color: 0xff6600,
-            combine: THREE.MultiplyOperation
-        }),
-        "blue-metal": new THREE.MeshLambertMaterial({
-            color: 0x001133,
-            combine: THREE.MultiplyOperation
-        }),
-        "red-metal": new THREE.MeshLambertMaterial({
-            color: 0x770000,
-            combine: THREE.MultiplyOperation
-        }),
-        "orange-glass-50": new THREE.MeshLambertMaterial({color: 0xffbb00, opacity: 0.5, transparent: true})
-    };
-    this.materialsMap = [
-        this.materialPalette["black-rough"], // tires + inside
-        this.materialPalette["pure-chrome"], // wheels + extras chrome
-        this.materialPalette["black-metal"], // back / top / front torso
-        this.materialPalette["dark-glass"],	// glass
-        this.materialPalette["pure-chrome"], // sides torso
-        this.materialPalette["pure-chrome"], // engine
-        this.materialPalette["red-glass-50"], // back lights
-        this.materialPalette["orange-glass-50"]	// back signals
-    ];
+    this.modelData = 'data/bugatti/VeyronNoUv_bin.js';
     this.geometry = null;
     this.mesh = null;
+    this.materialPalette = {
+        "pure-chrome": new THREE.MeshPhongMaterial({color: 0xffffff}),
+        "black-rough": new THREE.MeshLambertMaterial({color: 0x050505}),
+        "red-glass-50": new THREE.MeshLambertMaterial({color: 0xff0000, opacity: 0.5, transparent: true}),
+        "dark-glass": new THREE.MeshLambertMaterial({color: 0x101046, opacity: 0.20, transparent: true}),
+        "green-metal": new THREE.MeshLambertMaterial({color: 0x007711, combine: THREE.MultiplyOperation}),
+        "black-metal": new THREE.MeshPhongMaterial({color: 0x222222, combine: THREE.MultiplyOperation}),
+        "orange-metal": new THREE.MeshLambertMaterial({color: 0xff6600, combine: THREE.MultiplyOperation}),
+        "blue-metal": new THREE.MeshLambertMaterial({color: 0x001133, combine: THREE.MultiplyOperation}),
+        "red-metal": new THREE.MeshLambertMaterial({color: 0x770000}),
+        "orange-glass-50": new THREE.MeshLambertMaterial({color: 0xffbb00, opacity: 0.5, transparent: true})
+    };
+    this.carPieces = {
+        tiresAndInside: {
+            material: this.materialPalette["black-rough"],
+            faceMaterialOrder: 0
+        },
+        wheelsAndExtraChrome: {
+            material: this.materialPalette["pure-chrome"],
+            faceMaterialOrder: 1
+        },
+        backAndTopAndFrontTorso: {
+            material: this.materialPalette["red-metal"],
+            faceMaterialOrder: 2
+        },
+        glass: {
+            material: this.materialPalette["dark-glass"],
+            faceMaterialOrder: 3
+        },
+        sidesTorso: {
+            material: this.materialPalette["black-metal"],
+            faceMaterialOrder: 4
+        },
+        engine: {
+            material: this.materialPalette["pure-chrome"],
+            faceMaterialOrder: 5
+        },
+        backLights: {
+            material: this.materialPalette["red-glass-50"],
+            faceMaterialOrder: 6
+        },
+        backSignals: {
+            material: this.materialPalette["orange-glass-50"],
+            faceMaterialOrder: 7
+        }
+    };
 };
 BugattiCar.prototype.constructor = BugattiCar;
+BugattiCar.prototype = new Observable();
 BugattiCar.prototype.createMesh = function () {
     var meshFaceMaterial = new THREE.MeshFaceMaterial();
 
-    for (var i in this.materialsMap) {
-        meshFaceMaterial.materials[i] = this.materialsMap[i];
+    for (var pieceIndex in this.carPieces) {
+        meshFaceMaterial.materials[this.carPieces[pieceIndex].faceMaterialOrder] = this.carPieces[pieceIndex].material;
     }
 
     this.mesh = new THREE.Mesh(this.geometry, meshFaceMaterial);
     this.mesh.position.y = 41.5;
 
     return this.mesh;
+};
+BugattiCar.prototype.loadCar = function () {
+    var loader = new THREE.BinaryLoader(true);
+
+    loader.load(this.modelData, (function (carGeometry) {
+        this.geometry = carGeometry;
+        this.notifyObservers();
+    }).bind(this));
 };
 
 
@@ -74,7 +101,7 @@ AutoShow.prototype.constructor = AutoShow;
 AutoShow.prototype.initCamera = function () {
     var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 3000);
     camera.position.x = -150;
-    camera.position.y = 80;
+    camera.position.y = 150;
     camera.position.z = 350;
 
     return camera;
@@ -87,12 +114,12 @@ AutoShow.prototype.initRender = function () {
 };
 AutoShow.prototype.initCar = function () {
     this.car = new BugattiCar();
-    var loader = new THREE.BinaryLoader(true);
+    this.car.registerObserver(this);
+    this.car.loadCar();
 
-    loader.load(this.car.data, (function (carGeometry) {
-        this.car.geometry = carGeometry;
-        this.scene.add(this.car.createMesh());
-    }).bind(this));
+};
+AutoShow.prototype.update = function () {
+    this.scene.add(this.car.createMesh());
 };
 AutoShow.prototype.initFloor = function () {
     var texture = THREE.ImageUtils.loadTexture('img/texture/cement_256_d.png');
@@ -100,7 +127,7 @@ AutoShow.prototype.initFloor = function () {
     texture.wrapT = THREE.RepeatWrapping;
     texture.repeat.set(30, 30);
     var geometry = new THREE.PlaneGeometry(3000, 3000);
-    var material = new THREE.MeshBasicMaterial({side: THREE.DoubleSide, map: texture});
+    var material = new THREE.MeshLambertMaterial({side: THREE.DoubleSide, map: texture});
     var floor = new THREE.Mesh(geometry, material);
     floor.rotation.x = 90 * Math.PI / 180;
 
@@ -124,7 +151,7 @@ AutoShow.prototype.initStand = function () {
     texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
     texture.repeat.set(6, 6);
     var geometry = new THREE.BoxGeometry(170 * 2, 8, 170 * 2, 1, 1);
-    var material = new THREE.MeshBasicMaterial({map: texture});
+    var material = new THREE.MeshPhongMaterial({map: texture});
     var stand = new THREE.Mesh(geometry, material);
     stand.position.y = 2.1;
 
@@ -165,16 +192,19 @@ AutoShow.prototype.initColumns = function () {
 
 };
 AutoShow.prototype.initLights = function () {
-    var firstLight = new THREE.DirectionalLight(0xffffff, 1);
+    // Standard Fluorescent, http://planetpixelemporium.com/tutorialpages/light.html
+    var lightColor = 0xF4FFFA;
+
+    var firstLight = new THREE.DirectionalLight(lightColor, 0.5);
     firstLight.position.set(100, 200, 0);
     this.scene.add(firstLight);
 
-    var secondLight = new THREE.DirectionalLight(0xffffff, 1);
+    var secondLight = new THREE.DirectionalLight(lightColor, 0.5);
     secondLight.position.set(0, 200, 0);
     this.scene.add(secondLight);
 
-    var thirdLight = new THREE.DirectionalLight(0xffffff, 1);
-    thirdLight.position.set(0, 200, 0);
+    var thirdLight = new THREE.DirectionalLight(lightColor, 0.5);
+    thirdLight.position.set(-100, 200, 0);
     this.scene.add(thirdLight);
 };
 AutoShow.prototype.initStats = function () {
@@ -191,7 +221,7 @@ AutoShow.prototype.initControls = function () {
     this.controls.minDistance = 150;
     this.controls.minPolarAngle = 60 * Math.PI / 180;
     this.controls.maxPolarAngle = 85 * Math.PI / 180;
-} ;
+};
 AutoShow.prototype.initGui = function () {
     var gui = new dat.GUI();
 
@@ -215,7 +245,7 @@ AutoShow.prototype.init = function () {
     this.floor = this.initFloor();
     this.roof = this.initRoof();
 
-    this.scene.fog = new THREE.Fog(0x000000, 500, 2000);
+    this.scene.fog = new THREE.Fog(0x000000, 200, 2000);
 
     this.initControls();
     this.initLights();
