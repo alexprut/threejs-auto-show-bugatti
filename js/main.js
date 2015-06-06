@@ -11,7 +11,9 @@ Observable.prototype.notifyObservers = function () {
     }
 };
 
-var BugattiCar = function () {
+var BugattiCar = function (uniforms) {
+    Observable.call(this);
+    this.uniforms = uniforms;
     this.modelData = 'data/bugatti/VeyronNoUv_bin.js';
     this.geometry = null;
     this.mesh = null;
@@ -33,11 +35,19 @@ var BugattiCar = function () {
             faceMaterialOrder: 0
         },
         wheelsAndExtraChrome: {
-            material: this.materialPalette["pure-chrome"],
+            material: new THREE.ShaderMaterial({
+                uniforms: this.createUniforms(0x770000),
+                fragmentShader: this.getFragmentShader('fragment'),
+                vertexShader: this.getVertexShader('vertex')
+            }),
             faceMaterialOrder: 1
         },
         backAndTopAndFrontTorso: {
-            material: this.materialPalette["red-metal"],
+            material: new THREE.ShaderMaterial({
+                uniforms: this.createUniforms(0x770000),
+                fragmentShader: this.getFragmentShader('fragment-backAndTopAndFrontTorso'),
+                vertexShader: this.getVertexShader('vertex-backAndTopAndFrontTorso')
+            }),
             faceMaterialOrder: 2
         },
         glass: {
@@ -63,7 +73,7 @@ var BugattiCar = function () {
     };
 };
 BugattiCar.prototype.constructor = BugattiCar;
-BugattiCar.prototype = new Observable();
+BugattiCar.prototype = Object.create(Observable.prototype);
 BugattiCar.prototype.createMesh = function () {
     var meshFaceMaterial = new THREE.MeshFaceMaterial();
 
@@ -84,6 +94,26 @@ BugattiCar.prototype.loadCar = function () {
         this.notifyObservers();
     }).bind(this));
 };
+BugattiCar.prototype.getVertexShader = function (idDOM) {
+    return document.getElementById(idDOM).innerHTML;
+};
+BugattiCar.prototype.getFragmentShader = function (idDOM) {
+    return document.getElementById(idDOM).innerHTML;
+};
+BugattiCar.prototype.createUniforms = function (color) {
+    var uniforms = this.uniforms;
+    color = new THREE.Color(color);
+
+    uniforms.materialColor = {
+        type: 'v3',
+        value: new THREE.Vector3(color.r, color.g, color.b)
+    };
+
+    uniforms.rho.value = new THREE.Vector3(color.r, color.g, color.b);
+    uniforms.lightPower.value = new THREE.Vector3(7000.0, 7000.0, 7000.0);
+
+    return uniforms;
+};
 
 
 var AutoShow = function () {
@@ -95,14 +125,13 @@ var AutoShow = function () {
     this.floor = null;
     this.stand = null;
     this.car = null;
-    this.lights = null;
+    this.lights = [];
+    this.imgPath = "img/texture/";
 };
 AutoShow.prototype.constructor = AutoShow;
 AutoShow.prototype.initCamera = function () {
     var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 3000);
-    camera.position.x = -150;
-    camera.position.y = 150;
-    camera.position.z = 350;
+    camera.position.set(-150, 150, 350);
 
     return camera;
 };
@@ -113,7 +142,7 @@ AutoShow.prototype.initRender = function () {
     return renderer;
 };
 AutoShow.prototype.initCar = function () {
-    this.car = new BugattiCar();
+    this.car = new BugattiCar(this.createUniforms());
     this.car.registerObserver(this);
     this.car.loadCar();
 
@@ -121,91 +150,106 @@ AutoShow.prototype.initCar = function () {
 AutoShow.prototype.update = function () {
     this.scene.add(this.car.createMesh());
 };
+AutoShow.prototype.createUniforms = function () {
+    return {
+        lightPosition: {
+            type: 'v3',
+            value: this.lights[1].position
+        },
+        ambient: {
+            type: 'v3',
+            value: new THREE.Vector3(0.09, 0.09, 0.1)
+        },
+        rho: {
+            type: "v3",
+            value: new THREE.Vector3(0, 0, 0)
+        },
+        lightPower: {
+            type: "v3",
+            value: this.lights[1].intensity
+        }
+    };
+};
 AutoShow.prototype.initFloor = function () {
-    var texture = THREE.ImageUtils.loadTexture('img/texture/cement_256_d.png');
-    texture.wrapS = THREE.RepeatWrapping;
-    texture.wrapT = THREE.RepeatWrapping;
+    var texture = THREE.ImageUtils.loadTexture(this.imgPath + 'cement_256_d.png');
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
     texture.repeat.set(30, 30);
-    var geometry = new THREE.PlaneGeometry(3000, 3000);
-    var material = new THREE.MeshLambertMaterial({side: THREE.DoubleSide, map: texture});
-    var floor = new THREE.Mesh(geometry, material);
+
+    var floor = new THREE.Mesh(
+        new THREE.PlaneGeometry(3000, 3000),
+        new THREE.MeshLambertMaterial({side: THREE.DoubleSide, map: texture})
+    );
+
     floor.rotation.x = 90 * Math.PI / 180;
 
     return floor;
 };
 AutoShow.prototype.initRoof = function () {
-    var texture = THREE.ImageUtils.loadTexture('img/texture/cement_256_d.png');
-    texture.wrapS = THREE.RepeatWrapping;
-    texture.wrapT = THREE.RepeatWrapping;
+    var texture = THREE.ImageUtils.loadTexture(this.imgPath + 'cement_256_d.png');
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
     texture.repeat.set(30, 30);
-    var geometry = new THREE.PlaneGeometry(3000, 3000);
-    var material = new THREE.MeshBasicMaterial({side: THREE.DoubleSide, map: texture});
-    var roof = new THREE.Mesh(geometry, material);
+
+    var roof = new THREE.Mesh(
+        new THREE.PlaneGeometry(3000, 3000),
+        new THREE.MeshBasicMaterial({side: THREE.DoubleSide, map: texture})
+    );
+
     roof.rotation.x = 90 * Math.PI / 180;
     roof.position.y = 200;
 
     return roof;
 };
 AutoShow.prototype.initStand = function () {
-    var texture = THREE.ImageUtils.loadTexture('img/texture/metal_256_d.png');
+    var texture = THREE.ImageUtils.loadTexture(this.imgPath + 'metal_256_d.png');
     texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
     texture.repeat.set(6, 6);
-    var geometry = new THREE.BoxGeometry(170 * 2, 8, 170 * 2, 1, 1);
-    var material = new THREE.MeshPhongMaterial({map: texture});
-    var stand = new THREE.Mesh(geometry, material);
+
+    var stand = new THREE.Mesh(
+        new THREE.BoxGeometry(340, 8, 340, 1, 1),
+        new THREE.MeshPhongMaterial({map: texture})
+    );
+
     stand.position.y = 2.1;
 
     return stand;
 };
 AutoShow.prototype.initColumns = function () {
-    var texture = THREE.ImageUtils.loadTexture('img/texture/cement_256_d.png');
-    texture.wrapS = THREE.RepeatWrapping;
-    texture.wrapT = THREE.RepeatWrapping;
+    var texture = THREE.ImageUtils.loadTexture(this.imgPath + 'cement_256_d.png');
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
     texture.repeat.set(1, 2);
-    var geometry = new THREE.BoxGeometry(70, 200, 70);
-    var material = new THREE.MeshBasicMaterial({side: THREE.DoubleSide, map: texture});
-    var firstColumn = new THREE.Mesh(geometry, material);
-    firstColumn.position.y = 100;
-    firstColumn.position.x = 300;
-    firstColumn.position.z = -300;
-    this.scene.add(firstColumn);
 
+    var geometry = new THREE.BoxGeometry(70, 200, 70),
+        material = new THREE.MeshBasicMaterial({side: THREE.DoubleSide, map: texture});
 
-    var secondColumn = new THREE.Mesh(geometry, material);
-    secondColumn.position.y = 100;
-    secondColumn.position.x = -300;
-    secondColumn.position.z = -300;
-    this.scene.add(secondColumn);
+    var column1 = new THREE.Mesh(geometry, material),
+        column2 = new THREE.Mesh(geometry, material),
+        column3 = new THREE.Mesh(geometry, material),
+        column4 = new THREE.Mesh(geometry, material);
 
-    var thirdColumn = new THREE.Mesh(geometry, material);
-    thirdColumn.position.y = 100;
-    thirdColumn.position.x = 300;
-    thirdColumn.position.z = 300;
-    this.scene.add(thirdColumn);
+    column1.position.set(300, 100, -300);
+    column2.position.set(-300, 100, -300);
+    column3.position.set(300, 100, 300);
+    column4.position.set(-300, 100,300);
 
-
-    var fourthColumn = new THREE.Mesh(geometry, material);
-    fourthColumn.position.y = 100;
-    fourthColumn.position.x = -300;
-    fourthColumn.position.z = 300;
-    this.scene.add(fourthColumn);
+    this.scene.add(column1);
+    this.scene.add(column2);
+    this.scene.add(column3);
+    this.scene.add(column4);
 
 };
 AutoShow.prototype.initLights = function () {
     // Standard Fluorescent, http://planetpixelemporium.com/tutorialpages/light.html
     var lightColor = 0xF4FFFA;
+    this.lights = [];
 
-    var firstLight = new THREE.DirectionalLight(lightColor, 0.5);
-    firstLight.position.set(100, 200, 0);
-    this.scene.add(firstLight);
+    for (var i = 0; i < 3; i++) {
+        this.lights.push(new THREE.DirectionalLight(lightColor, 0.5));
+        this.scene.add(this.lights[i]);
+    }
 
-    var secondLight = new THREE.DirectionalLight(lightColor, 0.5);
-    secondLight.position.set(0, 200, 0);
-    this.scene.add(secondLight);
-
-    var thirdLight = new THREE.DirectionalLight(lightColor, 0.5);
-    thirdLight.position.set(-100, 200, 0);
-    this.scene.add(thirdLight);
+    this.lights[0].position.set(0, 200, 0);
+    this.lights[1].position.set(100, 200, 0);
+    this.lights[2].position.set(-100, 200, 0);
 };
 AutoShow.prototype.initStats = function () {
     var stats = new Stats();
@@ -247,10 +291,10 @@ AutoShow.prototype.init = function () {
 
     this.scene.fog = new THREE.Fog(0x000000, 200, 2000);
 
+    this.initColumns();
     this.initControls();
     this.initLights();
     this.initCar();
-    this.initColumns();
 
     this.scene.add(this.roof);
     this.scene.add(this.floor);
