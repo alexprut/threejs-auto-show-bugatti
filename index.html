@@ -11,6 +11,82 @@
     <script src="bower_components/threejs/examples/js/libs/dat.gui.min.js"></script>
 </head>
 <body>
+    <script type="text/x-glsl" id="vertex-backAndTopAndFrontTorso">
+        uniform vec3 rho;
+        uniform vec3 ambient;
+        uniform vec3 lightPosition;
+        uniform vec3 materialColor;
+        uniform vec3 lightPower;
+
+        varying vec3 vColor;
+        varying vec3 outRadiance;
+
+        const float PI = 3.14159265359;
+
+        void main() {
+            vColor = materialColor;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+
+			vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
+			vec3 vNormal = normalMatrix * normal;
+			vec4 lPosition = viewMatrix * vec4(lightPosition, 1.0);
+			vec3 lVector = lPosition.xyz - modelViewPosition.xyz;
+			vec3 beta = lightPower / (4.0  * PI * length(lVector));
+			lVector = normalize(lVector);
+			float dotProduct = dot(vNormal, lVector);
+			float pointLightWeighting = max(dotProduct, 0.0);
+			outRadiance = beta * pointLightWeighting * rho / PI;
+		}
+    </script>
+    <script type="text/x-glsl" id="fragment-backAndTopAndFrontTorso">
+        varying vec3 vColor;
+        varying vec3 outRadiance;
+
+        void main() {
+            gl_FragColor = vec4(outRadiance, 1.0);
+        }
+    </script>
+    <script type="text/x-glsl" id="vertex">
+        // http://www.mathematik.uni-marburg.de/~thormae/lectures/graphics1/code/WebGLShaderLightMat/ShaderLightMat.html
+        uniform vec3 lightPosition;
+        varying vec3 outRadiance;
+
+        const vec3 diffuseColor = vec3(1, 1.0, 1.0);
+        const vec3 specColor = vec3(1.0, 1.0, 1.0);
+
+        void main(){
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          vec3 vNormal = normalMatrix * normal;
+
+          // vertPos4
+          vec4 lPosition = viewMatrix * vec4(lightPosition, 1.0);
+
+          vec3 vertPos = vec3(lPosition) / lPosition.w;
+          vec3 lightDir = normalize(lightPosition - vertPos);
+          vec3 reflectDir = reflect(-lightDir, vNormal);
+          vec3 viewDir = normalize(-vertPos);
+
+          float lambertian = max(dot(lightDir,normal), 0.0);
+          float specular = 0.0;
+
+          if(lambertian > 0.0) {
+            float specAngle = max(dot(reflectDir, viewDir), 0.0);
+            specular = pow(specAngle, 4.0);
+
+            // according to the rendering equation we would need to multiply
+            // with the the "lambertian", but this has little visual effect
+            specular *= lambertian;
+          }
+          outRadiance = lambertian*diffuseColor + specular*specColor;
+        }
+    </script>
+    <script type="text/x-glsl" id="fragment">
+        varying vec3 outRadiance;
+
+        void main() {
+            gl_FragColor = vec4(outRadiance, 1.0);
+        }
+    </script>
     <div id="panel">
         <div id="logo">
             <img src="img/bugatti-logo.png" alt=""/>
