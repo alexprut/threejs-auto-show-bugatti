@@ -172,8 +172,8 @@ AutoShow.prototype.createUniforms = function () {
 };
 AutoShow.prototype.initFloor = function () {
     var texture = THREE.ImageUtils.loadTexture(this.imgPath + 'cement_256_d.png');
-    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-    texture.repeat.set(30, 30);
+    texture.wrapS = texture.wrapT = THREE.MirroredRepeatWrapping;
+    texture.repeat.set(Math.floor(3000/128), Math.floor(3000/128));
 
     var floor = new THREE.Mesh(
         new THREE.PlaneGeometry(3000, 3000),
@@ -183,6 +183,12 @@ AutoShow.prototype.initFloor = function () {
     floor.rotation.x = 90 * Math.PI / 180;
 
     return floor;
+};
+AutoShow.prototype.initDebugMode = function () {
+    if (document.location.href.indexOf('?debug=true') !== -1) {
+        this.stats = this.initStats();
+        this.initGui();
+    }
 };
 AutoShow.prototype.initRoof = function () {
     var texture = THREE.ImageUtils.loadTexture(this.imgPath + 'cement_256_d.png');
@@ -284,7 +290,6 @@ AutoShow.prototype.init = function () {
     this.renderer = this.initRender();
     this.scene = new THREE.Scene();
     this.camera = this.initCamera();
-    this.stats = this.initStats();
     this.stand = this.initStand();
     this.floor = this.initFloor();
     this.roof = this.initRoof();
@@ -300,7 +305,7 @@ AutoShow.prototype.init = function () {
     this.scene.add(this.floor);
     this.scene.add(this.stand);
 
-    this.initGui();
+    this.initDebugMode();
 
     document.body.appendChild(this.renderer.domElement);
     this.render();
@@ -308,9 +313,15 @@ AutoShow.prototype.init = function () {
 AutoShow.prototype.render = function () {
     requestAnimationFrame(this.render.bind(this));
 
-    this.stats.begin();
+    if (this.stats) {
+        this.stats.begin();
+    }
+
     this.renderer.render(this.scene, this.camera);
-    this.stats.end();
+
+    if (this.stats) {
+        this.stats.end();
+    }
 };
 
 var autoShow = new AutoShow();
