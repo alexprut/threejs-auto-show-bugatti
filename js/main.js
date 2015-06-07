@@ -131,7 +131,7 @@ var AutoShow = function () {
 AutoShow.prototype.constructor = AutoShow;
 AutoShow.prototype.initCamera = function () {
     var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 3000);
-    camera.position.set(-150, 150, 350);
+    camera.position.set(0, 150, 350);
 
     return camera;
 };
