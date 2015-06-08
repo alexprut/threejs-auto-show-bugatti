@@ -37,16 +37,16 @@ var BugattiCar = function (uniforms) {
         wheelsAndExtraChrome: {
             material: new THREE.ShaderMaterial({
                 uniforms: this.createUniforms(0x770000),
-                fragmentShader: this.getFragmentShader('fragment'),
-                vertexShader: this.getVertexShader('vertex')
+                fragmentShader: this.getFragmentShader('fragment-default'),
+                vertexShader: this.getVertexShader('vertex-phong')
             }),
             faceMaterialOrder: 1
         },
         backAndTopAndFrontTorso: {
             material: new THREE.ShaderMaterial({
                 uniforms: this.createUniforms(0x770000),
-                fragmentShader: this.getFragmentShader('fragment-backAndTopAndFrontTorso'),
-                vertexShader: this.getVertexShader('vertex-backAndTopAndFrontTorso')
+                fragmentShader: this.getFragmentShader('fragment-default'),
+                vertexShader: this.getVertexShader('vertex-lambert')
             }),
             faceMaterialOrder: 2
         },
@@ -59,7 +59,11 @@ var BugattiCar = function (uniforms) {
             faceMaterialOrder: 4
         },
         engine: {
-            material: this.materialPalette["pure-chrome"],
+            material: new THREE.ShaderMaterial({
+                uniforms: this.createUniforms(0x770000),
+                fragmentShader: this.getFragmentShader('fragment-default'),
+                vertexShader: this.getVertexShader('vertex-phong')
+            }),
             faceMaterialOrder: 5
         },
         backLights: {
@@ -136,7 +140,7 @@ AutoShow.prototype.initCamera = function () {
     return camera;
 };
 AutoShow.prototype.initRender = function () {
-    var renderer = new THREE.WebGLRenderer({antialias: true});
+    var renderer = new THREE.WebGLRenderer({antialias: true, preserveDrawingBuffer: true});
     renderer.setSize(window.innerWidth, window.innerHeight);
 
     return renderer;
@@ -153,12 +157,12 @@ AutoShow.prototype.update = function () {
 AutoShow.prototype.createUniforms = function () {
     return {
         lightPosition: {
-            type: 'v3',
-            value: this.lights[1].position
+            type: 'v3v',
+            value: [this.lights[0].position, this.lights[1].position, this.lights[2].position]
         },
         ambient: {
             type: 'v3',
-            value: new THREE.Vector3(0.09, 0.09, 0.1)
+            value: new THREE.Vector3(0.1, 0.1, 0.1)
         },
         rho: {
             type: "v3",
@@ -175,9 +179,13 @@ AutoShow.prototype.initFloor = function () {
     texture.wrapS = texture.wrapT = THREE.MirroredRepeatWrapping;
     texture.repeat.set(Math.floor(3000/128), Math.floor(3000/128));
 
+    var normalMap = THREE.ImageUtils.loadTexture(this.imgPath + 'cement_256_n.png');
+    normalMap.wrapS = normalMap.wrapT = THREE.MirroredRepeatWrapping;
+    normalMap.repeat.set(Math.floor(3000/128), Math.floor(3000/128));
+
     var floor = new THREE.Mesh(
         new THREE.PlaneGeometry(3000, 3000),
-        new THREE.MeshLambertMaterial({side: THREE.DoubleSide, map: texture})
+        new THREE.MeshLambertMaterial({side: THREE.DoubleSide, map: texture, normalMap: normalMap})
     );
 
     floor.rotation.x = 90 * Math.PI / 180;
@@ -195,9 +203,13 @@ AutoShow.prototype.initRoof = function () {
     texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
     texture.repeat.set(30, 30);
 
+    var normalMap = THREE.ImageUtils.loadTexture(this.imgPath + 'cement_256_n.png');
+    normalMap.wrapS = normalMap.wrapT = THREE.RepeatWrapping;
+    normalMap.repeat.set(30, 30);
+
     var roof = new THREE.Mesh(
         new THREE.PlaneGeometry(3000, 3000),
-        new THREE.MeshBasicMaterial({side: THREE.DoubleSide, map: texture})
+        new THREE.MeshBasicMaterial({side: THREE.DoubleSide, map: texture, normalMap: normalMap})
     );
 
     roof.rotation.x = 90 * Math.PI / 180;
@@ -210,9 +222,13 @@ AutoShow.prototype.initStand = function () {
     texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
     texture.repeat.set(6, 6);
 
+    var normalMap = THREE.ImageUtils.loadTexture(this.imgPath + 'metal_256_n.png');
+    normalMap.wrapS = normalMap.wrapT = THREE.RepeatWrapping;
+    normalMap.repeat.set(6, 6);
+
     var stand = new THREE.Mesh(
-        new THREE.BoxGeometry(340, 8, 340, 1, 1),
-        new THREE.MeshPhongMaterial({map: texture})
+        new THREE.BoxGeometry(240, 8, 340, 1, 1),
+        new THREE.MeshPhongMaterial({map: texture, normalMap: normalMap})
     );
 
     stand.position.y = 2.1;
