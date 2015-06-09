@@ -130,6 +130,7 @@ var AutoShow = function () {
     this.stand = null;
     this.car = null;
     this.lights = [];
+    this.postProcessing = null;
     this.imgPath = "img/texture/";
 };
 AutoShow.prototype.constructor = AutoShow;
@@ -140,8 +141,9 @@ AutoShow.prototype.initCamera = function () {
     return camera;
 };
 AutoShow.prototype.initRender = function () {
-    var renderer = new THREE.WebGLRenderer({antialias: true, preserveDrawingBuffer: true});
+    var renderer = new THREE.WebGLRenderer({antialias: true});
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMapEnabled = true;
 
     return renderer;
 };
@@ -177,11 +179,11 @@ AutoShow.prototype.createUniforms = function () {
 AutoShow.prototype.initFloor = function () {
     var texture = THREE.ImageUtils.loadTexture(this.imgPath + 'cement_256_d.png');
     texture.wrapS = texture.wrapT = THREE.MirroredRepeatWrapping;
-    texture.repeat.set(Math.floor(3000/128), Math.floor(3000/128));
+    texture.repeat.set(Math.floor(3000 / 128), Math.floor(3000 / 128));
 
     var normalMap = THREE.ImageUtils.loadTexture(this.imgPath + 'cement_256_n.png');
     normalMap.wrapS = normalMap.wrapT = THREE.MirroredRepeatWrapping;
-    normalMap.repeat.set(Math.floor(3000/128), Math.floor(3000/128));
+    normalMap.repeat.set(Math.floor(3000 / 128), Math.floor(3000 / 128));
 
     var floor = new THREE.Mesh(
         new THREE.PlaneGeometry(3000, 3000),
@@ -193,10 +195,28 @@ AutoShow.prototype.initFloor = function () {
     return floor;
 };
 AutoShow.prototype.initDebugMode = function () {
-    if (document.location.href.indexOf('?debug=true') !== -1) {
-        this.stats = this.initStats();
-        this.initGui();
-    }
+    this.stats = this.initStats();
+    this.initGui();
+};
+AutoShow.prototype.initPostProcessing = function () {
+    this.postProcessing = new THREE.EffectComposer(this.renderer);
+    this.postProcessing.addPass(new THREE.RenderPass(this.scene, this.camera));
+
+    this.postProcessing.effects = {};
+    this.postProcessing.effects.vignette = new THREE.ShaderPass(
+        {
+            uniforms: {
+                "tDiffuse": {type: "t", value: null},
+                "offset": {type: "f", value: 0.8},
+                "darkness": {type: "f", value: 1.8}
+            },
+            vertexShader: document.getElementById('vertex-default-texture').innerHTML,
+            fragmentShader: document.getElementById('fragment-vignette').innerHTML
+        }
+    );
+    this.postProcessing.effects.vignette.renderToScreen = true;
+
+    this.postProcessing.addPass(this.postProcessing.effects.vignette);
 };
 AutoShow.prototype.initRoof = function () {
     var texture = THREE.ImageUtils.loadTexture(this.imgPath + 'cement_256_d.png');
@@ -251,7 +271,7 @@ AutoShow.prototype.initColumns = function () {
     column1.position.set(300, 100, -300);
     column2.position.set(-300, 100, -300);
     column3.position.set(300, 100, 300);
-    column4.position.set(-300, 100,300);
+    column4.position.set(-300, 100, 300);
 
     this.scene.add(column1);
     this.scene.add(column2);
@@ -266,6 +286,7 @@ AutoShow.prototype.initLights = function () {
 
     for (var i = 0; i < 3; i++) {
         this.lights.push(new THREE.DirectionalLight(lightColor, 0.5));
+        this.lights[i].castShadow = true;
         this.scene.add(this.lights[i]);
     }
 
@@ -321,7 +342,12 @@ AutoShow.prototype.init = function () {
     this.scene.add(this.floor);
     this.scene.add(this.stand);
 
-    this.initDebugMode();
+
+    if (document.location.href.indexOf('?debug=true') !== -1) {
+        this.initDebugMode();
+    }
+
+    this.initPostProcessing();
 
     document.body.appendChild(this.renderer.domElement);
     this.render();
@@ -333,7 +359,11 @@ AutoShow.prototype.render = function () {
         this.stats.begin();
     }
 
-    this.renderer.render(this.scene, this.camera);
+    if (this.postProcessing) {
+        this.postProcessing.render();
+    } else {
+        this.renderer.render(this.scene, this.camera);
+    }
 
     if (this.stats) {
         this.stats.end();

@@ -4,11 +4,21 @@
     <link rel="shortcut icon" href="img/favicon.png">
     <link rel="stylesheet" type="text/css" href="css/style.css">
     <script src="bower_components/threejs/build/three.js"></script>
+
     <script src="bower_components/threejs/examples/js/loaders/BinaryLoader.js"></script>
     <script src="bower_components/threejs/examples/js/loaders/TGALoader.js"></script>
+
     <script src="bower_components/stats.js/build/stats.min.js"></script>
-    <script src="bower_components/threejs/examples/js/controls/OrbitControls.js"></script>
     <script src="bower_components/threejs/examples/js/libs/dat.gui.min.js"></script>
+
+    <script src="bower_components/threejs/examples/js/shaders/CopyShader.js"></script>
+
+    <script src="bower_components/threejs/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="bower_components/threejs/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="bower_components/threejs/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="bower_components/threejs/examples/js/postprocessing/MaskPass.js"></script>
+
+    <script src="bower_components/threejs/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
     <script type="text/x-glsl" id="vertex-lambert">
@@ -90,6 +100,27 @@
           }
 
           outRadiance += ambient;
+        }
+    </script>
+    <script type="text/x-glsl" id="vertex-default-texture">
+        varying vec2 vUv;
+
+        void main() {
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+    </script>
+    <script type="text/x-glsl" id="fragment-vignette">
+        uniform float offset;
+        uniform float darkness;
+        uniform sampler2D tDiffuse;
+
+        varying vec2 vUv;
+
+        void main() {
+            vec4 texel = texture2D(tDiffuse, vUv);
+            vec2 uv = (vUv - vec2(0.5) ) * vec2(offset);
+            gl_FragColor = vec4(mix(texel.rgb, vec3(1.0 - darkness), dot(uv, uv)), texel.a);
         }
     </script>
     <div id="panel">
