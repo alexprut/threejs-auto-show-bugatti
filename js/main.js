@@ -78,6 +78,16 @@ var BugattiCar = function (uniforms) {
 };
 BugattiCar.prototype.constructor = BugattiCar;
 BugattiCar.prototype = Object.create(Observable.prototype);
+BugattiCar.prototype.setColorBackAndTopAndFrontTorso = function (color) {
+    if (!(color instanceof THREE.Color)) {
+        throw new Error("color param need to be an instace of THREE.Color");
+    }
+
+    this.carPieces
+        .backAndTopAndFrontTorso
+        .material
+        .uniforms.rho.value = new THREE.Vector3(color.r, color.g, color.b);
+};
 BugattiCar.prototype.createMesh = function () {
     var meshFaceMaterial = new THREE.MeshFaceMaterial();
 
@@ -372,3 +382,17 @@ AutoShow.prototype.render = function () {
 
 var autoShow = new AutoShow();
 autoShow.init();
+
+
+$('#controls button').colpick({
+    layout: 'hex',
+    submit: false,
+    colorScheme: 'dark',
+    onChange: function (hsb, hex) {
+        autoShow.car.setColorBackAndTopAndFrontTorso(new THREE.Color('#' + hex));
+    },
+    onShow: function (el) {
+        el = $(el);
+        el.css('top', 'auto').css('bottom', '70px');
+    }
+});
