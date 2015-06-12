@@ -11,8 +11,54 @@ Observable.prototype.notifyObservers = function () {
     }
 };
 
-var BugattiCar = function (uniforms) {
+
+var ShaderManager = function (vertexShader, fragmentShader, uniforms, defines) {
+    if (!vertexShader || !fragmentShader) {
+        throw new Error("you need to provide a vertex shader and a fragment shader");
+    }
+
+    this.vertexShader = vertexShader;
+    this.fragmentShader = fragmentShader;
+    this.uniforms = uniforms || {};
+    this.defines = defines || {};
+};
+ShaderManager.prototype.constructor = ShaderManager;
+ShaderManager.prototype.setUniforms = function (options) {
+    for (var indexOption in options) {
+        this.uniforms[indexOption] = options[indexOption];
+    }
+};
+ShaderManager.prototype.setDefines = function (options) {
+    for (var indexOption in options) {
+        this.defines[indexOption] = options[indexOption];
+    }
+};
+ShaderManager.prototype.createUniforms = function (options) {
+    var uniforms = JSON.parse(JSON.stringify(this.uniforms));
+
+    for (var indexOption in options) {
+        uniforms[indexOption] = options[indexOption];
+    }
+
+    return uniforms;
+};
+ShaderManager.prototype.createDefines = function (options) {
+    var defines = JSON.parse(JSON.stringify(this.defines));
+
+    for (var indexOption in options) {
+        defines[indexOption] = options[indexOption];
+    }
+
+    return defines;
+};
+
+var BugattiCar = function (uniforms, shaderManager) {
     Observable.call(this);
+    if (!(shaderManager instanceof ShaderManager)) {
+        throw new Error("shaderManager needs to be instance of ShaderManager");
+    }
+
+    this.shaderManager = shaderManager;
     this.uniforms = uniforms;
     this.modelData = 'data/bugatti/VeyronNoUv_bin.js';
     this.geometry = null;
@@ -36,17 +82,42 @@ var BugattiCar = function (uniforms) {
         },
         wheelsAndExtraChrome: {
             material: new THREE.ShaderMaterial({
-                uniforms: this.createUniforms(0x770000),
-                fragmentShader: this.getFragmentShader('fragment-default'),
-                vertexShader: this.getVertexShader('vertex-phong')
+                uniforms: this.shaderManager.createUniforms({
+                    type: {
+                        type: 'i',
+                        value: 1
+                    },
+                    ambient: {
+                        type: 'v3',
+                        value: new THREE.Vector3()
+                    },
+                    diffuseColor: {
+                        type: "v3",
+                        value: new THREE.Vector3(0.4, 0.4, 0.4)
+                    },
+                    specColor: {
+                        type: "v3",
+                        value: new THREE.Vector3(0.4, 0.4, 0.4)
+                    }
+                }),
+                vertexShader: this.shaderManager.vertexShader,
+                fragmentShader: this.shaderManager.fragmentShader
             }),
             faceMaterialOrder: 1
         },
         backAndTopAndFrontTorso: {
             material: new THREE.ShaderMaterial({
-                uniforms: this.createUniforms(0x770000),
-                fragmentShader: this.getFragmentShader('fragment-default'),
-                vertexShader: this.getVertexShader('vertex-lambert')
+                uniforms: this.shaderManager.createUniforms({
+                    rho: {
+                        type: 'v3',
+                        value: new THREE.Vector3(0.47, 0.0, 0.0)
+                    }
+                }),
+                vertexShader: this.shaderManager.vertexShader,
+                fragmentShader: this.shaderManager.fragmentShader,
+                defines: this.shaderManager.createDefines({
+                    HAS_UV: false
+                })
             }),
             faceMaterialOrder: 2
         },
@@ -60,9 +131,26 @@ var BugattiCar = function (uniforms) {
         },
         engine: {
             material: new THREE.ShaderMaterial({
-                uniforms: this.createUniforms(0x770000),
-                fragmentShader: this.getFragmentShader('fragment-default'),
-                vertexShader: this.getVertexShader('vertex-phong')
+                uniforms: this.shaderManager.createUniforms({
+                    type: {
+                        type: 'i',
+                        value: 1
+                    },
+                    ambient: {
+                        type: 'v3',
+                        value: new THREE.Vector3()
+                    },
+                    diffuseColor: {
+                        type: "v3",
+                        value: new THREE.Vector3(0.4, 0.4, 0.4)
+                    },
+                    specColor: {
+                        type: "v3",
+                        value: new THREE.Vector3(0.4, 0.4, 0.4)
+                    }
+                }),
+                vertexShader: this.shaderManager.vertexShader,
+                fragmentShader: this.shaderManager.fragmentShader
             }),
             faceMaterialOrder: 5
         },
@@ -80,7 +168,7 @@ BugattiCar.prototype.constructor = BugattiCar;
 BugattiCar.prototype = Object.create(Observable.prototype);
 BugattiCar.prototype.setColorBackAndTopAndFrontTorso = function (color) {
     if (!(color instanceof THREE.Color)) {
-        throw new Error("color param need to be an instace of THREE.Color");
+        throw new Error("color param need to be an instance of THREE.Color");
     }
 
     this.carPieces
@@ -142,8 +230,75 @@ var AutoShow = function () {
     this.lights = [];
     this.postProcessing = null;
     this.imgPath = "img/texture/";
+    this.shaderManager = null;
 };
 AutoShow.prototype.constructor = AutoShow;
+AutoShow.prototype.initShaders = function () {
+    this.shaderManager = new ShaderManager(
+        document.getElementById('vertex-shader').innerHTML,
+        document.getElementById('fragment-shader').innerHTML
+    );
+
+    this.shaderManager.setUniforms({
+        type: {
+            type: 'i',
+            value: 0 // 0 = lambert, 1 = phong
+        },
+        rho: {
+            type: "v3",
+            value: new THREE.Vector3(0, 0, 0)
+        },
+        lightPosition: {
+            type: 'v3v',
+            value: [this.lights[0].position, this.lights[1].position, this.lights[2].position]
+        },
+        ambient: {
+            type: 'v3',
+            value: new THREE.Vector3(0.1, 0.1, 0.1)
+        },
+        lightPower: {
+            type: "v3",
+            value: new THREE.Vector3(5000.0, 5000.0, 5000.0)
+        },
+        map: {
+            type: "t",
+            value: null
+        },
+        normalMap: {
+            type: "t",
+            value: null
+        },
+        textureRepeat: {
+            type: "v2",
+            value: new THREE.Vector2(1, 1)
+        },
+        diffuseColor: {
+            type: "v3",
+            value: new THREE.Vector3()
+        },
+        specColor: {
+            type: "v3",
+            value: new THREE.Vector3()
+        },
+        offset: {
+            type: "f",
+            value: 0.0
+        },
+        darkness: {
+            type: "f",
+            value: 0.0
+        },
+        tDiffuse: {
+            type: "t",
+            value: null
+        }
+    });
+    this.shaderManager.setDefines({
+        HAS_NORMAL_MAP: false,
+        HAS_MAP: false,
+        HAS_UV: true
+    });
+};
 AutoShow.prototype.initCamera = function () {
     var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 3000);
     camera.position.set(0, 150, 350);
@@ -158,10 +313,9 @@ AutoShow.prototype.initRender = function () {
     return renderer;
 };
 AutoShow.prototype.initCar = function () {
-    this.car = new BugattiCar(this.createUniforms());
+    this.car = new BugattiCar(this.createUniforms(), this.shaderManager);
     this.car.registerObserver(this);
     this.car.loadCar();
-
 };
 AutoShow.prototype.update = function () {
     this.scene.add(this.car.createMesh());
@@ -250,15 +404,35 @@ AutoShow.prototype.initRoof = function () {
 AutoShow.prototype.initStand = function () {
     var texture = THREE.ImageUtils.loadTexture(this.imgPath + 'metal_256_d.png');
     texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-    texture.repeat.set(6, 6);
 
     var normalMap = THREE.ImageUtils.loadTexture(this.imgPath + 'metal_256_n.png');
     normalMap.wrapS = normalMap.wrapT = THREE.RepeatWrapping;
-    normalMap.repeat.set(6, 6);
 
     var stand = new THREE.Mesh(
         new THREE.BoxGeometry(240, 8, 340, 1, 1),
-        new THREE.MeshPhongMaterial({map: texture, normalMap: normalMap})
+        new THREE.ShaderMaterial({
+            uniforms: this.shaderManager.createUniforms({
+                map: {
+                    type: 't',
+                    value: texture
+                },
+                normalMap: {
+                    type: 't',
+                    value: normalMap
+                },
+                textureRepeat: {
+                    type: 'v2',
+                    value: new THREE.Vector2(6, 6)
+                }
+            }),
+            vertexShader: this.shaderManager.vertexShader,
+            fragmentShader: this.shaderManager.fragmentShader,
+            defines: this.shaderManager.createDefines({
+                HAS_NORMAL_MAP: true,
+                HAS_MAP: true,
+                HAS_UV: true
+            })
+        })
     );
 
     stand.position.y = 2.1;
@@ -334,9 +508,11 @@ AutoShow.prototype.initGui = function () {
     return gui;
 };
 AutoShow.prototype.init = function () {
-    this.renderer = this.initRender();
     this.scene = new THREE.Scene();
+    this.renderer = this.initRender();
     this.camera = this.initCamera();
+    this.initLights();
+    this.initShaders();
     this.stand = this.initStand();
     this.floor = this.initFloor();
     this.roof = this.initRoof();
@@ -345,7 +521,6 @@ AutoShow.prototype.init = function () {
 
     this.initColumns();
     this.initControls();
-    this.initLights();
     this.initCar();
 
     this.scene.add(this.roof);
