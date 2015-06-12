@@ -6,6 +6,10 @@ __Live preview__: [https://palexcom.github.io/threejs-auto-show-bugatti](https:/
 
 __Debug Live preview__: [https://palexcom.github.io/threejs-auto-show-bugatti?debug=true](https://palexcom.github.io/threejs-auto-show-bugatti?debug=true)
 
+
+__________________
+
+
 #### Project Goals
 Develop a web page based on 3D graphics, using the three.js library,
 that showcases a product using realistic materials and illumination.
