@@ -62,9 +62,9 @@
         uniform vec2 textureRepeat;
         uniform int isMap;
         uniform sampler2D normalMap;
-        uniform int isNormalMap;
         uniform vec3 diffuseColor;
         uniform vec3 specColor;
+        uniform float roughness;
         uniform vec3 lightPosition[3];
 
         const float PI = 3.14159265359;
@@ -93,6 +93,27 @@
             return normalize(tsn * mapN);
         }
         #endif
+
+        vec3 beta(vec3 lightPower, vec3 lVector) {
+            return (lightPower / (4.0  * PI * length(lVector)));
+        }
+
+        // Cook-Torrance approximation
+        float G(float LdotH) {
+            return (1.0 / pow(LdotH, 2.0));
+        }
+
+        // Fresnel reflection, Schlick approximation
+        vec3 F(float LdotH, vec3 specColor) {
+            return specColor + (vec3(1.0) - specColor) * pow(1.0 - LdotH, 5.0);
+        }
+
+        // Trowbridge-Reitz
+        float D(float NdotH, float roughness) {
+            float A = pow(roughness, 2.0);
+            float B = PI * pow(pow(NdotH, 2.0) * (A - 1.0) + 1.0, 2.0);
+            return A / B;
+        }
 
         void main() {
             vec3 outRadiance = vec3(0.0);
@@ -130,13 +151,26 @@
 
                     outRadiance += (lambertian * diffuseColor + specular * specColor);
                 }
+            } else if (type == 2) {
+                // Microfacet
+                for (int i = 0; i < 3; i++) {
+                    vec3 n = normalize(vNormal);
+                    vec3 v = normalize(-eyePosition);
+                    vec3 l = normalize(lVector[i]);
+                    vec3 h = normalize(l+v);
+                    float NdotH = max(0.000000000001, dot(n, h));
+                    float VdotH = max(0.000000000001, dot(v, h));
+                    float NdotV = max(0.000000000001, dot(n, v));
+                    float NdotL = max(0.000000000001, dot(n, l));
+                    vec3 specular = F(VdotH, specColor) * G(VdotH) * D(NdotH, roughness) / 4.0;
+                    outRadiance += beta(lightPower, lVector[i]) * NdotL * specular;
+                }
             } else {
                 // Lambert (default)
                 for (int i = 0; i < 3; i++) {
-                    vec3 beta = lightPower / (4.0  * PI * length(lVector[i]));
                     float dotProduct = dot(normal, normalize(lVector[i]));
                     float pointLightWeighting = max(dotProduct, 0.0);
-                    outRadiance += (beta * pointLightWeighting * currentRho / PI);
+                    outRadiance += (beta(lightPower, lVector[i]) * pointLightWeighting * currentRho / PI);
                 }
             }
 
