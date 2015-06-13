@@ -89,7 +89,7 @@ var BugattiCar = function (uniforms, shaderManager) {
                     },
                     ambient: {
                         type: 'v3',
-                        value: new THREE.Vector3()
+                        value: new THREE.Vector3(-0.1, -0.1, -0.1)
                     },
                     diffuseColor: {
                         type: "v3",
@@ -108,9 +108,21 @@ var BugattiCar = function (uniforms, shaderManager) {
         backAndTopAndFrontTorso: {
             material: new THREE.ShaderMaterial({
                 uniforms: this.shaderManager.createUniforms({
+                    type: {
+                        type: 'i',
+                        value: 2
+                    },
                     rho: {
                         type: 'v3',
                         value: new THREE.Vector3(0.47, 0.0, 0.0)
+                    },
+                    specColor: {
+                        type: 'v3',
+                        value: new THREE.Vector3(0.47, 0.0, 0.0)
+                    },
+                    roughness: {
+                        type: 'f',
+                        value: 0.4
                     }
                 }),
                 vertexShader: this.shaderManager.vertexShader,
@@ -126,7 +138,16 @@ var BugattiCar = function (uniforms, shaderManager) {
             faceMaterialOrder: 3
         },
         sidesTorso: {
-            material: this.materialPalette["black-metal"],
+            material: new THREE.ShaderMaterial({
+                uniforms:  this.shaderManager.createUniforms({
+                    rho: {
+                        type: "v3",
+                        value: new THREE.Vector3(0.0663, 0.0663, 0.0663)
+                    }
+                }),
+                vertexShader: this.shaderManager.vertexShader,
+                fragmentShader: this.shaderManager.fragmentShader
+            }),
             faceMaterialOrder: 4
         },
         engine: {
@@ -175,6 +196,11 @@ BugattiCar.prototype.setColorBackAndTopAndFrontTorso = function (color) {
         .backAndTopAndFrontTorso
         .material
         .uniforms.rho.value = new THREE.Vector3(color.r, color.g, color.b);
+
+    this.carPieces
+        .backAndTopAndFrontTorso
+        .material
+        .uniforms.specColor.value = new THREE.Vector3(color.r, color.g, color.b);
 };
 BugattiCar.prototype.createMesh = function () {
     var meshFaceMaterial = new THREE.MeshFaceMaterial();
@@ -242,7 +268,7 @@ AutoShow.prototype.initShaders = function () {
     this.shaderManager.setUniforms({
         type: {
             type: 'i',
-            value: 0 // 0 = lambert, 1 = phong
+            value: 0 // 0 = lambert, 1 = phong, 2 = microfacet
         },
         rho: {
             type: "v3",
@@ -279,6 +305,10 @@ AutoShow.prototype.initShaders = function () {
         specColor: {
             type: "v3",
             value: new THREE.Vector3()
+        },
+        roughness: {
+            type: 'f',
+            value: 0.0
         },
         offset: {
             type: "f",
