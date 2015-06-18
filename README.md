@@ -13,15 +13,16 @@ Develop a web page based on 3D graphics, using the [three.js](http://threejs.org
 that showcases a product using realistic materials and illumination.
 
 #### Scene
-Composed by a _garage, 3 lights, a car_  and a _stand_ where the car is placed.
+Composed by a _garage, 4 lights, a car_  and a _stand_ where the car is placed.
 All the components are created using three.js primitive geometries except the car model.
 
 #### Light Staging
-The scene is composed by 3 directional lights respectively placed in:
+The scene is composed by 4 directional lights respectively placed in:
 
-1. First light: ```new THREE.Vector3(0, 200, 0)```
-2. Second light: ```new THREE.Vector3(100, 200, 0)```
-3. Third light: ```new THREE.Vector3(-100, 200, 0)```
+1. First light: ```new THREE.Vector3(0, 200, -140)```
+2. Second light: ```new THREE.Vector3(0, 200, 140)```
+3. Third light: ```new THREE.Vector3(180, 200, 0)```
+3. Third light: ```new THREE.Vector3(-180, 200, 0)```
 
 Light source is a [Standard Fluorescent](http://planetpixelemporium.com/tutorialpages/light.html) light
 expressed in rgb values as ```244, 255, 250```.
