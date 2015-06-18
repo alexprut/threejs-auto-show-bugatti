@@ -85,19 +85,23 @@ var BugattiCar = function (uniforms, shaderManager) {
                 uniforms: this.shaderManager.createUniforms({
                     type: {
                         type: 'i',
-                        value: 1
+                        value: 2
                     },
                     ambient: {
                         type: 'v3',
-                        value: new THREE.Vector3(-0.1, -0.1, -0.1)
+                        value: new THREE.Vector3(0.15,  0.15, 0.15)
                     },
                     diffuseColor: {
                         type: "v3",
-                        value: new THREE.Vector3(0.4, 0.4, 0.4)
+                        value: new THREE.Vector3(0.6, 0.6, 0.6)
                     },
                     specColor: {
                         type: "v3",
                         value: new THREE.Vector3(0.4, 0.4, 0.4)
+                    },
+                    roughness: {
+                        type: 'f',
+                        value: 0.1
                     }
                 }),
                 vertexShader: this.shaderManager.vertexShader,
@@ -112,6 +116,10 @@ var BugattiCar = function (uniforms, shaderManager) {
                         type: 'i',
                         value: 2
                     },
+                    ambient: {
+                        type: 'v3',
+                        value: new THREE.Vector3(0.15,  0.15, 0.15)
+                    },
                     rho: {
                         type: 'v3',
                         value: new THREE.Vector3(0.47, 0.0, 0.0)
@@ -122,7 +130,7 @@ var BugattiCar = function (uniforms, shaderManager) {
                     },
                     roughness: {
                         type: 'f',
-                        value: 0.4
+                        value: 0.2
                     }
                 }),
                 vertexShader: this.shaderManager.vertexShader,
@@ -140,9 +148,21 @@ var BugattiCar = function (uniforms, shaderManager) {
         sidesTorso: {
             material: new THREE.ShaderMaterial({
                 uniforms:  this.shaderManager.createUniforms({
-                    rho: {
+                    type: {
+                        type: 'i',
+                        value: 1
+                    },
+                    ambient: {
+                        type: 'v3',
+                        value: new THREE.Vector3(0.0,  0.0, 0.0)
+                    },
+                    diffuseColor: {
                         type: "v3",
                         value: new THREE.Vector3(0.0663, 0.0663, 0.0663)
+                    },
+                    specColor: {
+                        type: 'v3',
+                        value: new THREE.Vector3(0.03, 0.03, 0.03)
                     }
                 }),
                 vertexShader: this.shaderManager.vertexShader,
@@ -155,19 +175,23 @@ var BugattiCar = function (uniforms, shaderManager) {
                 uniforms: this.shaderManager.createUniforms({
                     type: {
                         type: 'i',
-                        value: 1
+                        value: 2
                     },
                     ambient: {
                         type: 'v3',
-                        value: new THREE.Vector3()
+                        value: new THREE.Vector3(0.15,  0.15, 0.15)
                     },
-                    diffuseColor: {
+                    rho: {
                         type: "v3",
-                        value: new THREE.Vector3(0.4, 0.4, 0.4)
+                        value: new THREE.Vector3(0.6, 0.6, 0.4)
                     },
                     specColor: {
                         type: "v3",
                         value: new THREE.Vector3(0.4, 0.4, 0.4)
+                    },
+                    roughness: {
+                        type: 'f',
+                        value: 0.15
                     }
                 }),
                 vertexShader: this.shaderManager.vertexShader,
@@ -238,7 +262,7 @@ BugattiCar.prototype.createUniforms = function (color) {
     };
 
     uniforms.rho.value = new THREE.Vector3(color.r, color.g, color.b);
-    uniforms.lightPower.value = new THREE.Vector3(7000.0, 7000.0, 7000.0);
+    uniforms.lightPower.value = new THREE.Vector3(5000.0, 5000.0, 5000.0);
 
     return uniforms;
 };
@@ -276,11 +300,11 @@ AutoShow.prototype.initShaders = function () {
         },
         lightPosition: {
             type: 'v3v',
-            value: [this.lights[0].position, this.lights[1].position, this.lights[2].position]
+            value: [this.lights[0].position, this.lights[1].position, this.lights[2].position, this.lights[3].position]
         },
         ambient: {
             type: 'v3',
-            value: new THREE.Vector3(0.1, 0.1, 0.1)
+            value: new THREE.Vector3(0.15, 0.15, 0.15)
         },
         lightPower: {
             type: "v3",
@@ -354,7 +378,7 @@ AutoShow.prototype.createUniforms = function () {
     return {
         lightPosition: {
             type: 'v3v',
-            value: [this.lights[0].position, this.lights[1].position, this.lights[2].position]
+            value: [this.lights[0].position, this.lights[1].position, this.lights[2].position, this.lights[3].position]
         },
         ambient: {
             type: 'v3',
@@ -498,15 +522,16 @@ AutoShow.prototype.initLights = function () {
     var lightColor = 0xF4FFFA;
     this.lights = [];
 
-    for (var i = 0; i < 3; i++) {
+    for (var i = 0; i < 4; i++) {
         this.lights.push(new THREE.DirectionalLight(lightColor, 0.5));
         this.lights[i].castShadow = true;
         this.scene.add(this.lights[i]);
     }
 
-    this.lights[0].position.set(0, 200, 0);
-    this.lights[1].position.set(100, 200, 0);
-    this.lights[2].position.set(-100, 200, 0);
+    this.lights[0].position.set(   0, 200, -140);
+    this.lights[1].position.set(   0, 200,  140);
+    this.lights[2].position.set( 180, 200, 0);
+    this.lights[3].position.set(-180, 200,  0);
 };
 AutoShow.prototype.initStats = function () {
     var stats = new Stats();
