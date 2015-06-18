@@ -25,11 +25,11 @@
 </head>
 <body>
     <script type="text/x-glsl" id="vertex-shader">
-        uniform vec3 lightPosition[3];
+        uniform vec3 lightPosition[4];
 
         varying vec2 vUv;
-        varying vec3 lVector[3];
-        varying vec4 lPosition[3];
+        varying vec3 lVector[4];
+        varying vec4 lPosition[4];
         varying vec3 vNormal;
         varying vec3 eyePosition;
 
@@ -47,7 +47,7 @@
 
             vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
 
-            for (int i = 0; i < 3; i++) {
+            for (int i = 0; i < 4; i++) {
                 lPosition[i] = viewMatrix * vec4(lightPosition[i], 1.0);
                 lVector[i] = lPosition[i].xyz - modelViewPosition.xyz;
             }
@@ -65,13 +65,13 @@
         uniform vec3 diffuseColor;
         uniform vec3 specColor;
         uniform float roughness;
-        uniform vec3 lightPosition[3];
+        uniform vec3 lightPosition[4];
 
         const float PI = 3.14159265359;
 
         varying vec2 vUv;
-        varying vec3 lVector[3];
-        varying vec4 lPosition[3];
+        varying vec3 lVector[4];
+        varying vec4 lPosition[4];
         varying vec3 vNormal;
         varying vec3 eyePosition;
 
@@ -131,7 +131,7 @@
             if (type == 1) {
                 // Phong
                 // http://www.mathematik.uni-marburg.de/~thormae/lectures/graphics1/code/WebGLShaderLightMat/ShaderLightMat.html
-                for (int i = 0; i < 3; i++) {
+                for (int i = 0; i < 4; i++) {
                     vec3 vertPos = vec3(lPosition[i]) / lPosition[i].w;
                     vec3 lightDir = normalize(lightPosition[i] - vertPos);
                     vec3 reflectDir = reflect(-lightDir, vNormal);
@@ -153,7 +153,7 @@
                 }
             } else if (type == 2) {
                 // Microfacet
-                for (int i = 0; i < 3; i++) {
+                for (int i = 0; i < 4; i++) {
                     vec3 n = normalize(vNormal);
                     vec3 v = normalize(-eyePosition);
                     vec3 l = normalize(lVector[i]);
@@ -167,7 +167,7 @@
                 }
             } else {
                 // Lambert (default)
-                for (int i = 0; i < 3; i++) {
+                for (int i = 0; i < 4; i++) {
                     float dotProduct = dot(normal, normalize(lVector[i]));
                     float pointLightWeighting = max(dotProduct, 0.0);
                     outRadiance += (beta(lightPower, lVector[i]) * pointLightWeighting * currentRho / PI);
