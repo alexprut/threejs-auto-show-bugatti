@@ -22,7 +22,7 @@ The scene is composed by 4 directional lights respectively placed in:
 1. First light: ```new THREE.Vector3(0, 200, -140)```
 2. Second light: ```new THREE.Vector3(0, 200, 140)```
 3. Third light: ```new THREE.Vector3(180, 200, 0)```
-3. Third light: ```new THREE.Vector3(-180, 200, 0)```
+3. Fourth light: ```new THREE.Vector3(-180, 200, 0)```
 
 Light source is a [Standard Fluorescent](http://planetpixelemporium.com/tutorialpages/light.html) light
 expressed in rgb values as ```244, 255, 250```.
@@ -56,6 +56,8 @@ G(l,v, h) - Geometry Factor using an easier approximation of Cook-Torrance equat
 #### Interaction
 The user is able to inspect the object using appropriate camera control mechanism (orbit around the product, zoom).
 It can also interact with the showcase product by changing the car back, top and front torso color.
+
+![Demo - Interaction](https://github.com/PAlexcom/threejs-auto-show-bugatti/raw/master/img/demo-interaction.png)
 
 #### Product
 The product in the showcase is a Bugatti Veyron car.
