@@ -135,9 +135,7 @@ var BugattiCar = function (uniforms, shaderManager) {
                 }),
                 vertexShader: this.shaderManager.vertexShader,
                 fragmentShader: this.shaderManager.fragmentShader,
-                defines: this.shaderManager.createDefines({
-                    HAS_UV: false
-                })
+                defines: this.shaderManager.defines
             }),
             faceMaterialOrder: 2
         },
@@ -234,7 +232,7 @@ BugattiCar.prototype.createMesh = function () {
     }
 
     this.mesh = new THREE.Mesh(this.geometry, meshFaceMaterial);
-    this.mesh.position.y = 41.5;
+    this.mesh.position.y = 44;
 
     return this.mesh;
 };
@@ -346,11 +344,6 @@ AutoShow.prototype.initShaders = function () {
             type: "t",
             value: null
         }
-    });
-    this.shaderManager.setDefines({
-        HAS_NORMAL_MAP: false,
-        HAS_MAP: false,
-        HAS_UV: true
     });
 };
 AutoShow.prototype.initCamera = function () {
