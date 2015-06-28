@@ -89,7 +89,7 @@ var BugattiCar = function (uniforms, shaderManager) {
                     },
                     ambient: {
                         type: 'v3',
-                        value: new THREE.Vector3(0.15,  0.15, 0.15)
+                        value: new THREE.Vector3(0.15, 0.15, 0.15)
                     },
                     diffuseColor: {
                         type: "v3",
@@ -118,7 +118,7 @@ var BugattiCar = function (uniforms, shaderManager) {
                     },
                     ambient: {
                         type: 'v3',
-                        value: new THREE.Vector3(0.15,  0.15, 0.15)
+                        value: new THREE.Vector3(0.15, 0.15, 0.15)
                     },
                     rho: {
                         type: 'v3',
@@ -145,14 +145,14 @@ var BugattiCar = function (uniforms, shaderManager) {
         },
         sidesTorso: {
             material: new THREE.ShaderMaterial({
-                uniforms:  this.shaderManager.createUniforms({
+                uniforms: this.shaderManager.createUniforms({
                     type: {
                         type: 'i',
                         value: 1
                     },
                     ambient: {
                         type: 'v3',
-                        value: new THREE.Vector3(0.0,  0.0, 0.0)
+                        value: new THREE.Vector3(0.0, 0.0, 0.0)
                     },
                     diffuseColor: {
                         type: "v3",
@@ -177,7 +177,7 @@ var BugattiCar = function (uniforms, shaderManager) {
                     },
                     ambient: {
                         type: 'v3',
-                        value: new THREE.Vector3(0.15,  0.15, 0.15)
+                        value: new THREE.Vector3(0.15, 0.15, 0.15)
                     },
                     rho: {
                         type: "v3",
@@ -521,10 +521,10 @@ AutoShow.prototype.initLights = function () {
         this.scene.add(this.lights[i]);
     }
 
-    this.lights[0].position.set(   0, 200, -140);
-    this.lights[1].position.set(   0, 200,  140);
-    this.lights[2].position.set( 180, 200, 0);
-    this.lights[3].position.set(-180, 200,  0);
+    this.lights[0].position.set(0, 200, -140);
+    this.lights[1].position.set(0, 200, 140);
+    this.lights[2].position.set(180, 200, 0);
+    this.lights[3].position.set(-180, 200, 0);
 };
 AutoShow.prototype.initStats = function () {
     var stats = new Stats();
@@ -540,6 +540,32 @@ AutoShow.prototype.initControls = function () {
     this.controls.minDistance = 150;
     this.controls.minPolarAngle = 60 * Math.PI / 180;
     this.controls.maxPolarAngle = 85 * Math.PI / 180;
+};
+AutoShow.prototype.initOnWindowsResizeEvent = function () {
+    window.addEventListener('resize', function () {
+        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.updateProjectionMatrix();
+
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+    }.bind(this));
+};
+AutoShow.prototype.initColorPicker = function (object) {
+    var colorVector = this.car.carPieces.backAndTopAndFrontTorso.material.uniforms.rho.value;
+    var defaultHexColor = new THREE.Color(colorVector.x, colorVector.y, colorVector.w);
+
+    object.colpick({
+        layout: 'hex',
+        submit: false,
+        colorScheme: 'dark',
+        color: defaultHexColor.getHexString(),
+        onChange: function (hsb, hex) {
+            this.car.setColorBackAndTopAndFrontTorso(new THREE.Color('#' + hex));
+        }.bind(this),
+        onShow: function (el) {
+            el = $(el);
+            el.css('top', 'auto').css('bottom', '70px');
+        }
+    });
 };
 AutoShow.prototype.initGui = function () {
     var gui = new dat.GUI();
@@ -570,6 +596,8 @@ AutoShow.prototype.init = function () {
     this.initColumns();
     this.initControls();
     this.initCar();
+    this.initColorPicker($('#controls button'));
+    this.initOnWindowsResizeEvent();
 
     this.scene.add(this.roof);
     this.scene.add(this.floor);
@@ -605,17 +633,3 @@ AutoShow.prototype.render = function () {
 
 var autoShow = new AutoShow();
 autoShow.init();
-
-
-$('#controls button').colpick({
-    layout: 'hex',
-    submit: false,
-    colorScheme: 'dark',
-    onChange: function (hsb, hex) {
-        autoShow.car.setColorBackAndTopAndFrontTorso(new THREE.Color('#' + hex));
-    },
-    onShow: function (el) {
-        el = $(el);
-        el.css('top', 'auto').css('bottom', '70px');
-    }
-});
