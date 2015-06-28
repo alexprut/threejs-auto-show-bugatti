@@ -279,6 +279,7 @@ var AutoShow = function () {
     this.postProcessing = null;
     this.imgPath = "img/texture/";
     this.shaderManager = null;
+    this.countAssetsToLoad = 8; // FIXME Big shit here, refactor asap
 };
 AutoShow.prototype.constructor = AutoShow;
 AutoShow.prototype.initShaders = function () {
@@ -364,8 +365,17 @@ AutoShow.prototype.initCar = function () {
     this.car.registerObserver(this);
     this.car.loadCar();
 };
+AutoShow.prototype.updateLoadedAssets = function () {
+    this.countAssetsToLoad--;
+
+    if (this.countAssetsToLoad === 0) {
+        console.log("loaded all assets");
+        document.getElementById('loader').style.visibility = 'hidden';
+    }
+};
 AutoShow.prototype.update = function () {
     this.scene.add(this.car.createMesh());
+    this.updateLoadedAssets();
 };
 AutoShow.prototype.createUniforms = function () {
     return {
@@ -388,11 +398,15 @@ AutoShow.prototype.createUniforms = function () {
     };
 };
 AutoShow.prototype.initFloor = function () {
-    var texture = THREE.ImageUtils.loadTexture(this.imgPath + 'cement_256_d.png');
+    var texture = THREE.ImageUtils.loadTexture(this.imgPath + 'cement_256_d.png', null, (function () {
+        this.updateLoadedAssets();
+    }).bind(this));
     texture.wrapS = texture.wrapT = THREE.MirroredRepeatWrapping;
     texture.repeat.set(Math.floor(3000 / 128), Math.floor(3000 / 128));
 
-    var normalMap = THREE.ImageUtils.loadTexture(this.imgPath + 'cement_256_n.png');
+    var normalMap = THREE.ImageUtils.loadTexture(this.imgPath + 'cement_256_n.png', null, (function () {
+        this.updateLoadedAssets();
+    }).bind(this));
     normalMap.wrapS = normalMap.wrapT = THREE.MirroredRepeatWrapping;
     normalMap.repeat.set(Math.floor(3000 / 128), Math.floor(3000 / 128));
 
@@ -430,11 +444,15 @@ AutoShow.prototype.initPostProcessing = function () {
     this.postProcessing.addPass(this.postProcessing.effects.vignette);
 };
 AutoShow.prototype.initRoof = function () {
-    var texture = THREE.ImageUtils.loadTexture(this.imgPath + 'cement_256_d.png');
+    var texture = THREE.ImageUtils.loadTexture(this.imgPath + 'cement_256_d.png', null, (function () {
+        this.updateLoadedAssets();
+    }).bind(this));
     texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
     texture.repeat.set(30, 30);
 
-    var normalMap = THREE.ImageUtils.loadTexture(this.imgPath + 'cement_256_n.png');
+    var normalMap = THREE.ImageUtils.loadTexture(this.imgPath + 'cement_256_n.png', null, (function () {
+        this.updateLoadedAssets();
+    }).bind(this));
     normalMap.wrapS = normalMap.wrapT = THREE.RepeatWrapping;
     normalMap.repeat.set(30, 30);
 
@@ -449,10 +467,14 @@ AutoShow.prototype.initRoof = function () {
     return roof;
 };
 AutoShow.prototype.initStand = function () {
-    var texture = THREE.ImageUtils.loadTexture(this.imgPath + 'metal_256_d.png');
+    var texture = THREE.ImageUtils.loadTexture(this.imgPath + 'metal_256_d.png', null, (function () {
+        this.updateLoadedAssets();
+    }).bind(this));
     texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
 
-    var normalMap = THREE.ImageUtils.loadTexture(this.imgPath + 'metal_256_n.png');
+    var normalMap = THREE.ImageUtils.loadTexture(this.imgPath + 'metal_256_n.png', null, (function () {
+        this.updateLoadedAssets();
+    }).bind(this));
     normalMap.wrapS = normalMap.wrapT = THREE.RepeatWrapping;
 
     var stand = new THREE.Mesh(
@@ -487,7 +509,9 @@ AutoShow.prototype.initStand = function () {
     return stand;
 };
 AutoShow.prototype.initColumns = function () {
-    var texture = THREE.ImageUtils.loadTexture(this.imgPath + 'cement_256_d.png');
+    var texture = THREE.ImageUtils.loadTexture(this.imgPath + 'cement_256_d.png', null, (function () {
+        this.updateLoadedAssets();
+    }).bind(this));
     texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
     texture.repeat.set(1, 2);
 
