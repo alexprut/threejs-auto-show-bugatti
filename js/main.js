@@ -89,7 +89,7 @@ var BugattiCar = function (uniforms, shaderManager) {
                     },
                     ambient: {
                         type: 'v3',
-                        value: new THREE.Vector3(0.15,  0.15, 0.15)
+                        value: new THREE.Vector3(0.15, 0.15, 0.15)
                     },
                     diffuseColor: {
                         type: "v3",
@@ -118,7 +118,7 @@ var BugattiCar = function (uniforms, shaderManager) {
                     },
                     ambient: {
                         type: 'v3',
-                        value: new THREE.Vector3(0.15,  0.15, 0.15)
+                        value: new THREE.Vector3(0.15, 0.15, 0.15)
                     },
                     rho: {
                         type: 'v3',
@@ -135,9 +135,7 @@ var BugattiCar = function (uniforms, shaderManager) {
                 }),
                 vertexShader: this.shaderManager.vertexShader,
                 fragmentShader: this.shaderManager.fragmentShader,
-                defines: this.shaderManager.createDefines({
-                    HAS_UV: false
-                })
+                defines: this.shaderManager.defines
             }),
             faceMaterialOrder: 2
         },
@@ -147,14 +145,14 @@ var BugattiCar = function (uniforms, shaderManager) {
         },
         sidesTorso: {
             material: new THREE.ShaderMaterial({
-                uniforms:  this.shaderManager.createUniforms({
+                uniforms: this.shaderManager.createUniforms({
                     type: {
                         type: 'i',
                         value: 1
                     },
                     ambient: {
                         type: 'v3',
-                        value: new THREE.Vector3(0.0,  0.0, 0.0)
+                        value: new THREE.Vector3(0.0, 0.0, 0.0)
                     },
                     diffuseColor: {
                         type: "v3",
@@ -179,7 +177,7 @@ var BugattiCar = function (uniforms, shaderManager) {
                     },
                     ambient: {
                         type: 'v3',
-                        value: new THREE.Vector3(0.15,  0.15, 0.15)
+                        value: new THREE.Vector3(0.15, 0.15, 0.15)
                     },
                     rho: {
                         type: "v3",
@@ -234,7 +232,7 @@ BugattiCar.prototype.createMesh = function () {
     }
 
     this.mesh = new THREE.Mesh(this.geometry, meshFaceMaterial);
-    this.mesh.position.y = 41.5;
+    this.mesh.position.y = 44;
 
     return this.mesh;
 };
@@ -281,6 +279,7 @@ var AutoShow = function () {
     this.postProcessing = null;
     this.imgPath = "img/texture/";
     this.shaderManager = null;
+    this.countAssetsToLoad = 8; // FIXME Big shit here, refactor asap
 };
 AutoShow.prototype.constructor = AutoShow;
 AutoShow.prototype.initShaders = function () {
@@ -347,11 +346,6 @@ AutoShow.prototype.initShaders = function () {
             value: null
         }
     });
-    this.shaderManager.setDefines({
-        HAS_NORMAL_MAP: false,
-        HAS_MAP: false,
-        HAS_UV: true
-    });
 };
 AutoShow.prototype.initCamera = function () {
     var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 3000);
@@ -371,8 +365,17 @@ AutoShow.prototype.initCar = function () {
     this.car.registerObserver(this);
     this.car.loadCar();
 };
+AutoShow.prototype.updateLoadedAssets = function () {
+    this.countAssetsToLoad--;
+
+    if (this.countAssetsToLoad === 0) {
+        console.log("loaded all assets");
+        document.getElementById('loader').style.visibility = 'hidden';
+    }
+};
 AutoShow.prototype.update = function () {
     this.scene.add(this.car.createMesh());
+    this.updateLoadedAssets();
 };
 AutoShow.prototype.createUniforms = function () {
     return {
@@ -395,11 +398,15 @@ AutoShow.prototype.createUniforms = function () {
     };
 };
 AutoShow.prototype.initFloor = function () {
-    var texture = THREE.ImageUtils.loadTexture(this.imgPath + 'cement_256_d.png');
+    var texture = THREE.ImageUtils.loadTexture(this.imgPath + 'cement_256_d.png', null, (function () {
+        this.updateLoadedAssets();
+    }).bind(this));
     texture.wrapS = texture.wrapT = THREE.MirroredRepeatWrapping;
     texture.repeat.set(Math.floor(3000 / 128), Math.floor(3000 / 128));
 
-    var normalMap = THREE.ImageUtils.loadTexture(this.imgPath + 'cement_256_n.png');
+    var normalMap = THREE.ImageUtils.loadTexture(this.imgPath + 'cement_256_n.png', null, (function () {
+        this.updateLoadedAssets();
+    }).bind(this));
     normalMap.wrapS = normalMap.wrapT = THREE.MirroredRepeatWrapping;
     normalMap.repeat.set(Math.floor(3000 / 128), Math.floor(3000 / 128));
 
@@ -437,11 +444,15 @@ AutoShow.prototype.initPostProcessing = function () {
     this.postProcessing.addPass(this.postProcessing.effects.vignette);
 };
 AutoShow.prototype.initRoof = function () {
-    var texture = THREE.ImageUtils.loadTexture(this.imgPath + 'cement_256_d.png');
+    var texture = THREE.ImageUtils.loadTexture(this.imgPath + 'cement_256_d.png', null, (function () {
+        this.updateLoadedAssets();
+    }).bind(this));
     texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
     texture.repeat.set(30, 30);
 
-    var normalMap = THREE.ImageUtils.loadTexture(this.imgPath + 'cement_256_n.png');
+    var normalMap = THREE.ImageUtils.loadTexture(this.imgPath + 'cement_256_n.png', null, (function () {
+        this.updateLoadedAssets();
+    }).bind(this));
     normalMap.wrapS = normalMap.wrapT = THREE.RepeatWrapping;
     normalMap.repeat.set(30, 30);
 
@@ -456,10 +467,14 @@ AutoShow.prototype.initRoof = function () {
     return roof;
 };
 AutoShow.prototype.initStand = function () {
-    var texture = THREE.ImageUtils.loadTexture(this.imgPath + 'metal_256_d.png');
+    var texture = THREE.ImageUtils.loadTexture(this.imgPath + 'metal_256_d.png', null, (function () {
+        this.updateLoadedAssets();
+    }).bind(this));
     texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
 
-    var normalMap = THREE.ImageUtils.loadTexture(this.imgPath + 'metal_256_n.png');
+    var normalMap = THREE.ImageUtils.loadTexture(this.imgPath + 'metal_256_n.png', null, (function () {
+        this.updateLoadedAssets();
+    }).bind(this));
     normalMap.wrapS = normalMap.wrapT = THREE.RepeatWrapping;
 
     var stand = new THREE.Mesh(
@@ -494,7 +509,9 @@ AutoShow.prototype.initStand = function () {
     return stand;
 };
 AutoShow.prototype.initColumns = function () {
-    var texture = THREE.ImageUtils.loadTexture(this.imgPath + 'cement_256_d.png');
+    var texture = THREE.ImageUtils.loadTexture(this.imgPath + 'cement_256_d.png', null, (function () {
+        this.updateLoadedAssets();
+    }).bind(this));
     texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
     texture.repeat.set(1, 2);
 
@@ -528,10 +545,10 @@ AutoShow.prototype.initLights = function () {
         this.scene.add(this.lights[i]);
     }
 
-    this.lights[0].position.set(   0, 200, -140);
-    this.lights[1].position.set(   0, 200,  140);
-    this.lights[2].position.set( 180, 200, 0);
-    this.lights[3].position.set(-180, 200,  0);
+    this.lights[0].position.set(0, 200, -140);
+    this.lights[1].position.set(0, 200, 140);
+    this.lights[2].position.set(180, 200, 0);
+    this.lights[3].position.set(-180, 200, 0);
 };
 AutoShow.prototype.initStats = function () {
     var stats = new Stats();
@@ -547,6 +564,32 @@ AutoShow.prototype.initControls = function () {
     this.controls.minDistance = 150;
     this.controls.minPolarAngle = 60 * Math.PI / 180;
     this.controls.maxPolarAngle = 85 * Math.PI / 180;
+};
+AutoShow.prototype.initOnWindowsResizeEvent = function () {
+    window.addEventListener('resize', function () {
+        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.updateProjectionMatrix();
+
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+    }.bind(this));
+};
+AutoShow.prototype.initColorPicker = function (object) {
+    var colorVector = this.car.carPieces.backAndTopAndFrontTorso.material.uniforms.rho.value;
+    var defaultHexColor = new THREE.Color(colorVector.x, colorVector.y, colorVector.w);
+
+    object.colpick({
+        layout: 'hex',
+        submit: false,
+        colorScheme: 'dark',
+        color: defaultHexColor.getHexString(),
+        onChange: function (hsb, hex) {
+            this.car.setColorBackAndTopAndFrontTorso(new THREE.Color('#' + hex));
+        }.bind(this),
+        onShow: function (el) {
+            el = $(el);
+            el.css('top', 'auto').css('bottom', '70px');
+        }
+    });
 };
 AutoShow.prototype.initGui = function () {
     var gui = new dat.GUI();
@@ -577,6 +620,8 @@ AutoShow.prototype.init = function () {
     this.initColumns();
     this.initControls();
     this.initCar();
+    this.initColorPicker($('#controls button'));
+    this.initOnWindowsResizeEvent();
 
     this.scene.add(this.roof);
     this.scene.add(this.floor);
@@ -612,17 +657,3 @@ AutoShow.prototype.render = function () {
 
 var autoShow = new AutoShow();
 autoShow.init();
-
-
-$('#controls button').colpick({
-    layout: 'hex',
-    submit: false,
-    colorScheme: 'dark',
-    onChange: function (hsb, hex) {
-        autoShow.car.setColorBackAndTopAndFrontTorso(new THREE.Color('#' + hex));
-    },
-    onShow: function (el) {
-        el = $(el);
-        el.css('top', 'auto').css('bottom', '70px');
-    }
-});
