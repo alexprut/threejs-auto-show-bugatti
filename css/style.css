@@ -87,6 +87,7 @@ body .dg.a {
 	margin-left: -80px;
 	margin-top: -80px;
 	border-bottom: solid 2px #363636;
+	-webkit-animation: animation-rotate-clockwise 2000ms linear infinite;
 	animation: animation-rotate-clockwise 2000ms linear infinite;
 }
 
@@ -105,6 +106,7 @@ body .dg.a {
 	margin-left: -78px;
 	margin-top: -78px;
 	border-bottom: solid 2px #770000;
+	-webkit-animation: animation-rotate-clockwise 3000ms linear infinite;
 	animation: animation-rotate-clockwise 3000ms linear infinite;
 }
 
@@ -115,12 +117,19 @@ body .dg.a {
 	margin-left: -76px;
 	margin-top: -76px;
 	border-bottom: solid 2px #e40421;
+	-webkit-animation: animation-rotate-clockwise 4000ms linear infinite;
 	animation: animation-rotate-clockwise 4000ms linear infinite;
 }
 
 @-webkit-keyframes animation-rotate-clockwise {
 	100% {
 		-webkit-transform: rotate(360deg);
+	}
+}
+
+@keyframes animation-rotate-clockwise {
+	100% {
+		transform: rotate(360deg);
 	}
 }
 
