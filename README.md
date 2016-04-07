@@ -1,7 +1,7 @@
 Three.js — Auto Show — Bugatti Veyron
 -------------------------------------
 Project created during my Master's Degree in Computer Science for the _Interactive 3D Graphics_ class.  
-__Live preview__: [https://alexprut.github.io/threejs-auto-show-bugatti](https://alexprut.github.io/threejs-auto-show-bugatti)
+__Live preview__: [https://alexprut.github.io/threejs-auto-show-bugatti](https://alexprut.github.io/threejs-auto-show-bugatti)  
 __Debug Live preview__: [https://alexprut.github.io/threejs-auto-show-bugatti?debug=true](https://alexprut.github.io/threejs-auto-show-bugatti?debug=true)
 
 ![Demo - Auto Show — Bugatti Veyron](https://github.com/alexprut/threejs-auto-show-bugatti/raw/master/img/demo.png)
